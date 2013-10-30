@@ -13,5 +13,8 @@ This is an small tool that will crawl a website and print in STDOUT all crawled 
 
 # Installation
 
-```go install github.com/ernesto-jimenez/emit_urls```
+```
+go get github.com/ernesto-jimenez/emit_urls
+go install github.com/ernesto-jimenez/emit_urls
+```
 
