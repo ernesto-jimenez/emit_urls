@@ -9,7 +9,15 @@ import "github.com/ernesto-jimenez/emit_urls/url_extractor"
 
 func Crawl(initial_url string, channel chan FoundURL, logfile string) {
   parsedUrl, _ := url.Parse(initial_url)
-  output, _ := os.OpenFile(logfile, os.O_CREATE, 0666)
+  var output *os.File
+  switch logfile {
+  case "/dev/stdout":
+    output = os.Stdout
+  case "/dev/stderr":
+    output = os.Stderr
+  default:
+    output, _ = os.OpenFile(logfile, os.O_CREATE, 0666)
+  }
   log.SetOutput(output)
 
   host := parsedUrl.Host
@@ -25,13 +33,13 @@ func crawl(url string, channel chan FoundURL, host string,
   }
   defer resp.Body.Close()
 
-  if resp.StatusCode == 200 {
-    visitedURLs[url] = true
-    contentType := resp.Header.Get("Content-Type")
-    crawled := FoundURL{StatusCode: resp.StatusCode, Url: url, contentType: contentType}
-    channel <- crawled
-    log.Printf("%v\n", crawled)
+  visitedURLs[url] = true
+  contentType := resp.Header.Get("Content-Type")
+  crawled := FoundURL{StatusCode: resp.StatusCode, Url: url, contentType: contentType}
+  log.Printf("%v\n", crawled)
 
+  if resp.StatusCode == 200 {
+    channel <- crawled
     if strings.Contains(crawled.contentType, "text/html") {
       urls := url_extractor.ExtractURLs(url, resp.Body)
       for i := 0; i < len(urls); i++ {
